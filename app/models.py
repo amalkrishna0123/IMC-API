@@ -1,6 +1,8 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class BlogPost(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Link each post to a user
     code = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=100)
     address = models.TextField()

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API List</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group textarea { 
+            width: 100%; 
+            padding: 8px; 
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .btn { 
+            padding: 10px 15px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            margin-right: 10px;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn-export {
+            background: #28a745;
+            float: right;
+        }
+        .btn-export:hover {
+            background: #218838;
+        }
+        .token-display { 
+            margin-top: 20px; 
+            padding: 15px; 
+            background: #f8f9fa; 
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        #errorMessage { color: red; margin-top: 10px; }
+        .success-message { color: green; margin-top: 10px; }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            background: white;
+        }
+        th, td { 
+            padding: 12px; 
+            border: 1px solid #dee2e6; 
+            text-align: left; 
+        }
+        th { 
+            background-color: #f8f9fa; 
+            font-weight: bold;
+        }
+        .form-section { 
+            margin-top: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        body {
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+        }
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .json-preview {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow: auto;
+        }
+        .json-preview pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .close-preview {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API List</h1>
+        <form method="POST" action="{% url 'logout' %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="background: #dc3545;">Logout</button>
+        </form>
+    
+        
+        <!-- Token Generation Section -->
+        <div class="form-section">
+            <h2>Token Generation</h2>
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username">
+            </div>
+            <button onclick="generateToken()" class="btn">Generate Token</button>
+            <button onclick="window.location.href='{% url 'all_users' %}'" class="btn" style="margin-left: 10px; background: #28a745;">Add New User</button>
+            <div id="tokenDisplay" class="token-display" style="display: none;"></div>
+            <div id="errorMessage"></div>
+        </div>
+        
+
+        <!-- Data Entry Form -->
+        <div class="form-section">
+            <div class="header-section">
+                <h2>Add New Entry</h2>
+                <button onclick="previewJson()" class="btn btn-preview">Preview JSON</button>
+                    <button onclick="downloadJson()" class="btn btn-download">Download JSON</button>
+            </div>
+            <form id="dataForm">
+                <div class="form-group">
+                    <label for="code">Code:</label>
+                    <input type="text" id="code" name="code" required>
+                </div>
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="address">Address:</label>
+                    <textarea id="address" name="address" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="location">Location:</label>
+                    <input type="text" id="location" name="location" required>
+                </div>
+                <div class="form-group">
+                    <label for="district">District:</label>
+                    <input type="text" id="district" name="district" required>
+                </div>
+                <div class="form-group">
+                    <label for="state">State:</label>
+                    <input type="text" id="state" name="state" required>
+                </div>
+                <div class="form-group">
+                    <label for="planet_route">Planet Route:</label>
+                    <input type="text" id="planet_route" name="planet_route" required>
+                </div>
+                <div class="form-group">
+                    <label for="responsible_person_name">Responsible Person Name:</label>
+                    <input type="text" id="responsible_person_name" name="responsible_person_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact_number">Contact Number:</label>
+                    <input type="text" id="contact_number" name="contact_number" required>
+                </div>
+                <div class="form-group">
+                    <label for="business_nature">Business Nature:</label>
+                    <input type="text" id="business_nature" name="business_nature" required>
+                </div>
+                <div class="form-group">
+                    <label for="software">Software:</label>
+                    <input type="text" id="software" name="software" required>
+                </div>
+                <div class="form-group">
+                    <label for="client">Client:</label>
+                    <input type="text" id="client" name="client" required>
+                </div>
+                <div class="form-group">
+                    <label for="modules">Modules:</label>
+                    <input type="text" id="modules" name="modules" required>
+                </div>
+                <div class="form-group">
+                    <label for="service_type">Service Type:</label>
+                    <input type="text" id="service_type" name="service_type" required>
+                </div>
+                <div class="form-group">
+                    <label for="licence_type">License Type:</label>
+                    <input type="text" id="licence_type" name="licence_type" required>
+                </div>
+                <div class="form-group">
+                    <label for="branch">Branch:</label>
+                    <input type="text" id="branch" name="branch" required>
+                </div>
+                <button type="submit" class="btn">Submit Data</button>
+            </form>
+        </div>
+
+        <!-- Data Display Table -->
+        <div class="form-section">
+            <h2>Existing Entries</h2>
+            <div style="overflow-x: auto;">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Address</th>
+                            <th>Location</th>
+                            <th>District</th>
+                            <th>State</th>
+                            <th>Planet Route</th>
+                            <th>Responsible Person</th>
+                            <th>Contact</th>
+                            <th>Business Nature</th>
+                            <th>Software</th>
+                            <th>Client</th>
+                            <th>Modules</th>
+                            <th>Service Type</th>
+                            <th>License Type</th>
+                            <th>Branch</th>
+                            <th>Published Date</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- JSON Preview Modal -->
+    <div class="overlay" id="overlay"></div>
+    <div class="json-preview" id="jsonPreview">
+        <span class="close-preview" onclick="closeJsonPreview()">&times;</span>
+        <h2>JSON Data</h2>
+        <pre id="jsonContent"></pre>
+    </div>
+
+    <script>
+        let currentData = [];
+
+        function generateToken() {
+            const username = document.getElementById('username').value;
+            
+            fetch('/generate-token/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: username })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.token) {
+                    localStorage.setItem('api_token', data.token);
+                    const tokenDisplay = document.getElementById('tokenDisplay');
+                    tokenDisplay.style.display = 'block';
+                    tokenDisplay.innerHTML = `Your API Token: ${data.token}`;
+                    document.getElementById('errorMessage').innerHTML = '';
+                    loadData();
+                } else {
+                    document.getElementById('errorMessage').innerHTML = data.error || 'Error generating token';
+                }
+            })
+            .catch(error => {
+                document.getElementById('errorMessage').innerHTML = 'Error: ' + error.message;
+            });
+        }
+
+        function loadData() {
+            const token = localStorage.getItem('api_token');
+            if (!token) {
+                document.getElementById('errorMessage').innerHTML = 'Please generate a token first';
+                return;
+            }
+
+            fetch('/apilist/', {
+                headers: {
+                    'Authorization': `Token ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Token invalid or expired');
+                }
+                return response.json();
+            })
+            .then(data => {
+                currentData = data;
+                const tableBody = document.querySelector('#dataTable tbody');
+                tableBody.innerHTML = '';
+                
+                data.forEach(item => {
+                    const row = `
+                        <tr>
+                            <td>${item.code || ''}</td>
+                            <td>${item.name || ''}</td>
+                            <td>${item.address || ''}</td>
+                            <td>${item.location || ''}</td>
+                            <td>${item.district || ''}</td>
+                            <td>${item.state || ''}</td>
+                            <td>${item.planet_route || ''}</td>
+                            <td>${item.responsible_person_name || ''}</td>
+                            <td>${item.contact_number || ''}</td>
+                            <td>${item.business_nature || ''}</td>
+                            <td>${item.software || ''}</td>
+                            <td>${item.client || ''}</td>
+                            <td>${item.modules || ''}</td>
+                            <td>${item.service_type || ''}</td>
+                            <td>${item.licence_type || ''}</td>
+                            <td>${item.branch || ''}</td>
+                            <td>${item.published_date || ''}</td>
+                            
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            })
+            .catch(error => {
+                document.getElementById('errorMessage').innerHTML = error.message;
+                if (error.message === 'Token invalid or expired') {
+                    localStorage.removeItem('api_token');
+                }
+            });
+        }
+
+        document.getElementById('dataForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const token = localStorage.getItem('api_token');
+            if (!token) {
+                document.getElementById('errorMessage').innerHTML = 'Please generate a token first';
+                return;
+            }
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch('/apilist/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to add data. Please check your token and try again.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('errorMessage').innerHTML = '';
+                const successMessage = document.createElement('div');
+                successMessage.className = 'success-message';
+                successMessage.textContent = 'Data added successfully';
+                document.getElementById('errorMessage').parentNode.appendChild(successMessage);
+                this.reset();
+                loadData();
+            })
+            .catch(error => {
+                document.getElementById('errorMessage').innerHTML = error.message;
+            });
+        });
+
+        function exportToJson() {
+            if (currentData.length === 0) {
+                alert('No data available to export');
+                return;
+            }
+
+            // Show JSON preview
+            document.getElementById('jsonContent').textContent = JSON.stringify(currentData, null, 2);
+            document.getElementById('jsonPreview').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+
+            // Create download link
+            const dataStr = JSON.stringify(currentData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'data.json';
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        function closeJsonPreview() {
+            document.getElementById('jsonPreview').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('api_token');
+            if (token) {
+                loadData();
+            } else {
+                document.getElementById('errorMessage').innerHTML = 'Please generate a token first';
+            }
+        });
+
+        // Close JSON preview when clicking overlay
+        document.getElementById('overlay').addEventListener('click', closeJsonPreview);
+
+
+        function previewJson() {
+            if (currentData.length === 0) {
+                alert('No data available to preview');
+                return;
+            }
+
+            // Show JSON preview
+            document.getElementById('jsonContent').textContent = JSON.stringify(currentData, null, 2);
+            document.getElementById('jsonPreview').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        function downloadJson() {
+            if (currentData.length === 0) {
+                alert('No data available to download');
+                return;
+            }
+
+            // Create download link
+            const dataStr = JSON.stringify(currentData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'data.json';
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+    </script>
+</body>
+</html>
