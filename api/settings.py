@@ -27,6 +27,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+CSRF_TRUSTED_ORIGINS = [
+    "http://api.imcbs.com",
+    "https://api.imcbs.com",
+]
+
+
 
 # Application definition
 
